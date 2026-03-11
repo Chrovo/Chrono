@@ -2,12 +2,12 @@ import { useState } from "react";
 import { createTimeline } from "../utils/firestore";
 
 const Modal = ({ userID, open, onClose }) => {
-    if(!open) {
-        return;
-    }
-
     const [name, setName] = useState("");
     const [coverImage, setCoverImage] = useState("");
+
+    if(!open) {
+        return null;
+    }
 
     const onSubmit = async (e) => {
         e.preventDefault();
@@ -20,19 +20,51 @@ const Modal = ({ userID, open, onClose }) => {
     };
 
     return (
-        <div className="bg-black bg-opacity-70 top-0 bottom-0 right-0 left-0 z-1000 fixed">
-            <div className="bg-slate-800 fixed top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%] z-1000 w-[400px] h-[450px] rounded-lg">
-                <form className="flex-row" onSubmit={onSubmit}>
-                    <p className="text-white font-bold text-[40px] ml-[70px] mt-[15px]">New Timeline</p>
-                    <p className="text-white font-semibold text-[20px] ml-[50px] mt-[15px]">Timeline Name</p>
-                    <input type="text" placeholder="Name" className="ml-[50px] mt-[10px] border rounded-lg px-2 py-2" onChange={(e) => setName(e.target.value)} required />
-                    <p className="text-white font-semibold text-[20px] ml-[50px] mt-[30px]">Cover Image</p>
-                    <input type="text" placeholder="Cover Image URL" value={coverImage} onChange={(e) => setCoverImage(e.target.value)} className="ml-[50px] mt-[30px] border rounded-lg px-2 py-2" required />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={onClose}>
+            <div
+                className="backdrop-blur-xl bg-[#111827]/90 border border-white/10 rounded-2xl p-8 w-[420px] shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <h2 className="text-white font-bold text-2xl mb-6">New Timeline</h2>
+
+                <form className="space-y-5" onSubmit={onSubmit}>
                     <div>
-                        <button type="submit" className="text-white bg-black rounded-md py-2 px-4 text-[15px] text-lg shadow-xl ring-1 ring-gray-700 ml-[50px] mt-[10px]">Submit</button>
+                        <label className="text-slate-400 text-sm font-medium mb-2 block">Timeline Name</label>
+                        <input
+                            type="text"
+                            placeholder="Enter a name..."
+                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/25 transition-all duration-300"
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="text-slate-400 text-sm font-medium mb-2 block">Cover Image</label>
+                        <input
+                            type="text"
+                            placeholder="Image URL..."
+                            value={coverImage}
+                            onChange={(e) => setCoverImage(e.target.value)}
+                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/25 transition-all duration-300"
+                            required
+                        />
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                        <button
+                            type="submit"
+                            className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-400 text-white py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02]"
+                        >
+                            Create
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 backdrop-blur-xl bg-white/5 border border-white/10 text-slate-300 py-3 rounded-xl font-medium transition-all duration-300 hover:bg-white/10"
+                        >
+                            Cancel
+                        </button>
                     </div>
                 </form>
-                <button onClick={onClose} className="text-black bg-white rounded-md py-2 px-4 text-[15px] text-lg shadow-xl ring-1 ring-gray-700 ml-[50px] mt-[20px]">Close</button>
             </div>
         </div>
     )

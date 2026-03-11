@@ -5,24 +5,20 @@ import Footer from "../components/Footer";
 
 const Home = () => {
   return (
-  <div className="bg-slate-900 w-full overflow-hidden">
-    <div>
-      <Navbar/>
-    </div>
+    <div className="min-h-screen bg-[#0a0f1e] overflow-hidden">
+      <Navbar />
 
-    <div className="mt-[170px]">
-      <Hero/>
-    </div>
+      <div className="pt-40 pb-24">
+        <Hero />
+      </div>
 
-    <div className="mt-[160px]">
-      <Benefits />
-    </div>
+      <div className="py-24">
+        <Benefits />
+      </div>
 
-    <div className="mt-[100px]">
       <Footer />
     </div>
-  </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

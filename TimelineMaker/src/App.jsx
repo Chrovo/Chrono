@@ -4,6 +4,7 @@ import Login from './pages/login';
 import Signup from './pages/signup';
 import Timelines from "./pages/timelines";
 import TimelinePage from "./pages/TimelinePage";
+import SharePage from "./pages/SharePage";
 
 const App = () => {
   return (
@@ -14,6 +15,7 @@ const App = () => {
         <Route path="/signup" element={<Signup />} />
         <Route path="/timelines" element={<Timelines />} />
         <Route path="/timeline/:timelineId" element={<TimelinePage />} />
+        <Route path="/share/:shareString" element={<SharePage />} />
       </Routes>
     </BrowserRouter>
   )

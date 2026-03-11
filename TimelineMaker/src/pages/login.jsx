@@ -50,40 +50,81 @@ const Login = () => {
     }
 
     return (
-        <div>
+        <div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center px-6 relative overflow-hidden">
             {userLoggedIn && (<Navigate to={"/timelines"} replace />)}
-            <div className="bg-slate-900 w-screen h-screen flex justify-center items-center">
-                <form className="flex-row space-y-5" onSubmit={onSubmit}>
-                    <div className="flex justify-center">
-                        <p className="bg-gradient-to-r from-blue-700 via-sky-500 to-cyan-300  bg-clip-text text-transparent text-[50px] font-semibold">Chrono</p>
-                    </div>
-                    <div>
-                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-[200px] h-[30px] border rounded-md px-2 py-2" placeholder="Email" required  />
-                    </div>
-                    <div>
-                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="w-[200px] h-[30px] border rounded-md px-2 py-2" required />
-                    </div>
-                    {errorMessage && (
-                        <p className="text-red-500 text-sm">{errorMessage}</p>
-                    )}
-                    <div>
-                        <button type="submit" className="text-black bg-white  border-gray-300 text-[14px] rounded-md py-2 px-4 text-lg my-5 ml-10 shadow-xl ring-1 ring-gray-700">
-                            Log In
-                        </button>
-                    </div>
-                    <div className="flex justify-center">
-                        <button onClick={onGoogleSignIn} className="bg-blue-500 hover:bg-blue-600 text-white rounded-md px-4 py-2">
-                            Sign in With Google
-                        </button>
+
+            {/* Background orbs */}
+            <div className="absolute top-[20%] left-[15%] w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-[20%] right-[15%] w-[300px] h-[300px] bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 w-full max-w-md">
+                <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-8 shadow-2xl">
+                    <div className="text-center mb-8">
+                        <p className="bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-300 bg-clip-text text-transparent text-4xl font-bold">
+                            Chrono
+                        </p>
+                        <p className="text-slate-400 mt-2 text-sm">Welcome back</p>
                     </div>
 
-                    <div className="flex justify-center text-white">
-                        Don't have an account?&nbsp;
-                        <Link to="/signup" className="underline text-cyan-400">
+                    <form className="space-y-4" onSubmit={onSubmit}>
+                        <div>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/25 transition-all duration-300"
+                                placeholder="Email"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Password"
+                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/25 transition-all duration-300"
+                                required
+                            />
+                        </div>
+
+                        {errorMessage && (
+                            <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-2">{errorMessage}</p>
+                        )}
+
+                        <button
+                            type="submit"
+                            disabled={isSigningIn}
+                            className="w-full bg-gradient-to-r from-blue-500 to-cyan-400 text-white py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
+                        >
+                            {isSigningIn ? "Signing in..." : "Log In"}
+                        </button>
+                    </form>
+
+                    <div className="relative my-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-white/10" />
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="bg-[#0a0f1e] px-4 text-slate-500">or</span>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={onGoogleSignIn}
+                        disabled={isSigningIn}
+                        className="w-full backdrop-blur-xl bg-white/5 border border-white/10 text-slate-200 py-3 rounded-xl font-medium transition-all duration-300 hover:bg-white/10 hover:scale-[1.02] disabled:opacity-50"
+                    >
+                        Sign in with Google
+                    </button>
+
+                    <p className="text-center text-slate-500 text-sm mt-6">
+                        Don't have an account?{" "}
+                        <Link to="/signup" className="text-cyan-400 hover:text-cyan-300 transition-colors font-medium">
                             Sign Up
                         </Link>
-                    </div>
-                </form>
+                    </p>
+                </div>
             </div>
         </div>
     )
