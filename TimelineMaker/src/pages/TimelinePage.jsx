@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { db } from '../firebase/firebase';
-import { collection, addDoc, getDocs, doc, getDoc } from 'firebase/firestore'
+import { collection, addDoc, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore'
 import { signOut } from "../firebase/auth";
 import { useAuth } from "../contexts/AuthContext";
 import EventModal from "../components/EventModal"
+import EventDetailPopup from "../components/EventDetailPopup"
 
 const TimelinePage = () => {
   const navigate = useNavigate();
   const { timelineId } = useParams();
   const { currentUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [droppedItems, setDroppedItems] = useState([]);
   const [selectedType, setSelectedType] = useState(null);
   const [connections, setConnections] = useState([]);
@@ -20,6 +22,7 @@ const TimelinePage = () => {
   const [isViewOnly, setIsViewOnly] = useState(true);
   const [timelineShareString, setTimelineShareString] = useState('');
   const [loadingAccess, setLoadingAccess] = useState(true);
+  const [draggedCardIndex, setDraggedCardIndex] = useState(null);
   const eventTypes = [
     { name: "Event", color: "rgb(59, 130, 246)", bgClass: "bg-blue-500" },
     { name: "War", color: "rgb(168, 85, 247)", bgClass: "bg-purple-500" },
@@ -57,8 +60,13 @@ const TimelinePage = () => {
       setLoadingAccess(false);
 
       const q = await getDocs(collection(db, "timelines", timelineId, "events"));
-      const items = q.docs.map(d => d.data());
-      items.sort((a, b) => new Date(a.date) - new Date(b.date));
+      const items = q.docs.map(d => ({ ...d.data(), id: d.id }));
+      items.sort((a, b) => {
+        if (a.order !== undefined && b.order !== undefined) {
+          return a.order - b.order;
+        }
+        return new Date(a.date) - new Date(b.date);
+      });
       setDroppedItems(items);
     };
     loadTimeline();
@@ -91,17 +99,23 @@ const TimelinePage = () => {
     const eventData = {
       ...data,
       type: selectedType,
+      order: droppedItems.length, // Put at the end
     };
 
     if (eventData.x === undefined) delete eventData.x;
     if (eventData.y === undefined) delete eventData.y;
 
     const docRef = collection(db, "timelines", timelineId, "events");
-    await addDoc(docRef, eventData);
+    const docSnap = await addDoc(docRef, eventData);
 
-    const sortedItems = [...droppedItems, eventData].sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    );
+    const newItem = { ...eventData, id: docSnap.id };
+
+    const sortedItems = [...droppedItems, newItem].sort((a, b) => {
+      if (a.order !== undefined && b.order !== undefined) {
+        return a.order - b.order;
+      }
+      return new Date(a.date) - new Date(b.date);
+    });
 
     setDroppedItems(sortedItems);
     setIsOpen(false);
@@ -130,6 +144,46 @@ const TimelinePage = () => {
   const handleBoxMouseUp = () => {
     setDraggingBoxId(null);
   }
+
+  const handleCardDragStart = (e, index) => {
+    if (isViewOnly) return;
+    setDraggedCardIndex(index);
+    // Needed for Firefox
+    e.dataTransfer.setData('text/plain', index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleCardDragOver = (e, index) => {
+    if (isViewOnly) return;
+    e.preventDefault(); // Necessary to allow dropping
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleCardDrop = async (e, targetIndex) => {
+    if (isViewOnly || draggedCardIndex === null || draggedCardIndex === targetIndex) return;
+    e.preventDefault();
+    e.stopPropagation(); // Stop the container drop handler from firing
+
+    const newItems = [...droppedItems];
+    const itemToMove = newItems.splice(draggedCardIndex, 1)[0];
+    newItems.splice(targetIndex, 0, itemToMove);
+
+    // Reassign order sequential to match array index
+    const updatedItems = newItems.map((item, idx) => ({ ...item, order: idx }));
+    setDroppedItems(updatedItems);
+    setDraggedCardIndex(null);
+
+    // Save ALL new orders to firestore
+    try {
+      const promises = updatedItems.map(item => {
+        const itemRef = doc(db, "timelines", timelineId, "events", item.id);
+        return updateDoc(itemRef, { order: item.order });
+      });
+      await Promise.all(promises);
+    } catch (err) {
+      console.error("Error updating order:", err);
+    }
+  };
 
   const isEndpointConnected = (eventId, side) => {
     return connections.some(conn => 
@@ -293,9 +347,14 @@ const TimelinePage = () => {
             <div className="flex space-x-5 pb-4" style={{ minWidth: 'max-content' }}>
               {droppedItems.map((item, i) => (
                 <div 
-                  key={i}
-                  className="w-52 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 flex-shrink-0 relative select-none transition-all duration-300 hover:bg-white/10 hover:border-white/20"
-                  onMouseDown={handleBoxMouseDown}
+                  key={item.id || i}
+                  draggable={!isViewOnly}
+                  onDragStart={(e) => handleCardDragStart(e, i)}
+                  onDragOver={(e) => handleCardDragOver(e, i)}
+                  onDrop={(e) => handleCardDrop(e, i)}
+                  className="w-52 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 flex-shrink-0 relative select-none transition-all duration-300 hover:bg-white/10 hover:border-white/20 cursor-pointer"
+                  onClick={() => setSelectedEvent(item)}
+                  onMouseDown={(e) => handleBoxMouseDown(i)}
                   onMouseMove={handleBoxMouseMove}
                   onMouseUp={handleBoxMouseUp}
                 >
@@ -329,6 +388,7 @@ const TimelinePage = () => {
         </div>
       </div>
       {isOpen && !isViewOnly && <EventModal isOpen={isOpen} onClose={() => setIsOpen(false)} onSave={addEvent} eventType={selectedType} />} 
+      <EventDetailPopup event={selectedEvent} onClose={() => setSelectedEvent(null)} />
     </div>
   )
 }

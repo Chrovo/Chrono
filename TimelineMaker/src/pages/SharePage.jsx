@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { db } from '../firebase/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore'
+import EventDetailPopup from '../components/EventDetailPopup';
 
 const SharePage = () => {
   const { shareString } = useParams();
   const [droppedItems, setDroppedItems] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [timelineName, setTimelineName] = useState('');
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -36,8 +38,13 @@ const SharePage = () => {
       setTimelineName(data.name || 'Untitled Timeline');
 
       const eventsSnapshot = await getDocs(collection(db, "timelines", timelineDoc.id, "events"));
-      const items = eventsSnapshot.docs.map(doc => doc.data());
-      items.sort((a, b) => new Date(a.date) - new Date(b.date));
+      const items = eventsSnapshot.docs.map(d => ({ ...d.data(), id: d.id }));
+      items.sort((a, b) => {
+        if (a.order !== undefined && b.order !== undefined) {
+          return a.order - b.order;
+        }
+        return new Date(a.date) - new Date(b.date);
+      });
       setDroppedItems(items);
       setLoading(false);
     };
@@ -122,7 +129,11 @@ const SharePage = () => {
         <div className="mt-4 relative" style={{ zIndex: 2 }}>
           <div className="flex space-x-5 pb-4" style={{ minWidth: 'max-content' }}>
             {droppedItems.map((item, i) => (
-              <div key={i} className="w-52 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 flex-shrink-0 relative select-none">
+              <div 
+                key={i} 
+                className="w-52 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-5 flex-shrink-0 relative select-none cursor-pointer hover:bg-white/10 transition-colors"
+                onClick={() => setSelectedEvent(item)}
+              >
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getEventColor(item.type), boxShadow: `0 0 8px ${getEventColor(item.type)}40` }} />
                   <p className="text-white font-semibold text-sm">{item.type}</p>
@@ -134,6 +145,7 @@ const SharePage = () => {
           </div>
         </div>
       </div>
+      <EventDetailPopup event={selectedEvent} onClose={() => setSelectedEvent(null)} />
     </div>
   )
 }

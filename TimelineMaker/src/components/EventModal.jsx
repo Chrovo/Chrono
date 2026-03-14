@@ -3,10 +3,11 @@ import { useState } from "react"
 
 const EventModal = ({ isOpen, onClose, onSave, eventType, x, y, defaultValues }) => {
     const [text, setText] = useState(defaultValues?.text || "");
+    const [description, setDescription] = useState(defaultValues?.description || "");
     const [date, setDate] = useState(defaultValues?.date || "");
 
     const handleSubmit = () => {
-        onSave({ type: eventType, text, date, x, y});
+        onSave({ type: eventType, text, description, date, x, y});
         onClose();
     }
 
@@ -33,20 +34,34 @@ const EventModal = ({ isOpen, onClose, onSave, eventType, x, y, defaultValues })
                         />
                     </div>
                     <div>
-                        <label className="text-slate-400 text-sm font-medium mb-2 block">Description</label>
+                        <label className="text-slate-400 text-sm font-medium mb-2 block">Short Description</label>
                         <textarea 
-                            placeholder="Describe this event..." 
+                            placeholder="A brief summary (shown on card)..." 
                             value={text} 
                             onChange={(e) => setText(e.target.value)} 
                             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/25 transition-all duration-300 resize-none overflow-hidden"
-                            rows="3"
+                            rows="2"
                             style={{
-                                minHeight: '80px',
-                                maxHeight: '200px'
+                                minHeight: '60px',
+                                maxHeight: '120px'
                             }}
                             onInput={(e) => {
                                 e.target.style.height = 'auto';
                                 e.target.style.height = e.target.scrollHeight + 'px';
+                            }}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-slate-400 text-sm font-medium mb-2 block">Long Description (Optional)</label>
+                        <textarea 
+                            placeholder="Add detailed information about this event..." 
+                            value={description} 
+                            onChange={(e) => setDescription(e.target.value)} 
+                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/25 transition-all duration-300 resize-y"
+                            rows="4"
+                            style={{
+                                minHeight: '100px',
+                                maxHeight: '300px'
                             }}
                         />
                     </div>
